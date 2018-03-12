@@ -1,2 +1,2 @@
-# CDS_DL_MusicGroup
-Making music from deep learning.
+# TEMPO
+Transforming Existing Music to Prodce Originals
