@@ -1,7 +1,7 @@
 # TEMPO
 Transforming Existing Music to Produce Originals
 
-## **Team Members**
+## **Investigators**
 Aaron Lou
 
 Qian Huang
