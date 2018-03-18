@@ -1,14 +1,11 @@
-# TEMPO
-Transforming Existing Music to Produce Originals
+# TEMPO - Transforming Existing Music to Produce Originals
+1 short aragraph (3-4 sentence) description here
 
 ## **Investigators**
-Aaron Lou
-
-Qian Huang
-
-Sean Yu
-
-Wes Gurnee
+* Aaron Lou
+* Qian Huang
+* Sean Yu
+* Wes Gurnee
 
 ## **Motivation**
 
