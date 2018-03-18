@@ -4,7 +4,7 @@ import pretty_midi
 import random
 import librosa.display
 
-SAMPLE_FRQ = 100
+SAMPLE_FRQ = 10
 
 START_POINT = 1000
 TRAIN_LENGTH = 1000
@@ -139,14 +139,14 @@ def generate_music(t, prompt):
         x_batch = [current[i:i+num_steps]]
         result = sess.run(preds, feed_dict={x: x_batch, y: default.eval()})
         p = np.squeeze(result)[0]
+
+        
+
         p[np.argsort(p)[:-5]] = 0
-        p = p / np.sum(p)
-        current_note = np.random.choice(128, random.randrange(0,n + 1), p=p)
-        print("the note selected for " + str(i) + " is " + str(current_note))
-        c = [0]*128
-        for note in current_note:
-            c[note] = 1
-        current.append(c)
+
+        print("the note selected for " + str(i) + " is " + str(p))
+
+        current.append(p)
     return current
 
 
@@ -165,7 +165,7 @@ for t in range(len(gen)):
         v = gen[t][i]
         if v > 0.0 :
             print(str(t/fs) + " " + str((t+1)/fs))
-            note = pretty_midi.Note(velocity=100, pitch=i, start=t/fs, end=(t + 1)/fs)
+            note = pretty_midi.Note(velocity=v, pitch=i, start=t/fs, end=(t + 1)/fs)
             instrument.notes.append(note)
 
 
