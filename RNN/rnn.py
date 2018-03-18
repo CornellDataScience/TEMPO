@@ -1,13 +1,26 @@
 import tensorflow as tf
 import numpy as np
 import pretty_midi
-# For plotting
-
+import random
 import librosa.display
 
+SAMPLE_FRQ = 100
 
-pm = pretty_midi.PrettyMIDI('bach_bourree.mid')
-fs = 100
+START_POINT = 1000
+TRAIN_LENGTH = 1000
+TRAINING_ECHO = 100
+
+NUM_STEPS = 10
+MAX_CONCURRENT_NOTES = 3
+GENERATE_LENGTH = 1000
+
+input = 'EspanjaTango.mid'
+output = 'out.mid'
+prompt = 10
+
+# Loading data
+pm = pretty_midi.PrettyMIDI(input)
+fs = SAMPLE_FRQ
 def plot_piano_roll(pm, start_pitch, end_pitch, fs=fs):
     # Use librosa's specshow function for displaying the piano roll
     librosa.display.specshow(pm.get_piano_roll(fs)[start_pitch:end_pitch],
@@ -18,17 +31,17 @@ def plot_piano_roll(pm, start_pitch, end_pitch, fs=fs):
 # plt.figure(figsize=(12, 4))
 # plot_piano_roll(pm, 24, 84)
 
-roll = np.ndarray.transpose(pm.get_piano_roll(100))
+roll = np.ndarray.transpose(pm.get_piano_roll(SAMPLE_FRQ))
 
-train_roll = roll[0:200]
+train_roll = roll[START_POINT:START_POINT + TRAIN_LENGTH]
 print(train_roll.shape)
 note_size = train_roll.shape[1]
-print(note_size)
+print("note size " + str(note_size))
 
 
 
-# predict based on num_steps nptes before
-num_steps = 10
+# predict based on num_steps notes before
+num_steps = NUM_STEPS
 
 batch_size = 1
 
@@ -84,7 +97,7 @@ train_step = tf.train.AdamOptimizer(learning_rate=0.001).minimize(total_loss)
 
 
 
-
+# training
 
 
 data = ([], [])
@@ -103,7 +116,7 @@ sess = tf.InteractiveSession()
 init = tf.global_variables_initializer()
 sess.run(init)
 
-max_epochs = 50
+max_epochs = TRAINING_ECHO
 
 for i in range(max_epochs):
     print(i)
@@ -114,41 +127,49 @@ for i in range(max_epochs):
         sess.run(train_step, feed_dict={x: x_batch, y: y_batch})
 
 
+
+# generate music
+
+n = MAX_CONCURRENT_NOTES
+
 def generate_music(t, prompt):
     default = tf.zeros( [batch_size, num_steps, note_size])
     current = prompt[0:num_steps].tolist()
-    print("current " + str(len(current)))
     for i in range(t):
         x_batch = [current[i:i+num_steps]]
         result = sess.run(preds, feed_dict={x: x_batch, y: default.eval()})
         p = np.squeeze(result)[0]
-        print(np.argsort(p))
         p[np.argsort(p)[:-5]] = 0
         p = p / np.sum(p)
-        current_note = np.random.choice(128, 1, p=p)[0]
-        print(current_note)
+        current_note = np.random.choice(128, random.randrange(0,n + 1), p=p)
+        print("the note selected for " + str(i) + " is " + str(current_note))
         c = [0]*128
-        c[current_note] = 1
+        for note in current_note:
+            c[note] = 1
         current.append(c)
     return current
 
 
-gen = generate_music(100, roll[0:10])
-print(len(gen))
+gen = generate_music(GENERATE_LENGTH, roll[START_POINT:START_POINT + prompt])
+print("the length of generated file is " + str(len(gen)))
+
+print(gen)
 
 pm_gen = pretty_midi.PrettyMIDI(initial_tempo=80)
-instrument = pm.instruments[0]
+
+instrument = pretty_midi.Instrument(program=pm.instruments[0].program, is_drum=False, name='my cello')
 
 
 for t in range(len(gen)):
     for i in range(128):
         v = gen[t][i]
         if v > 0.0 :
-            note = pretty_midi.Note(velocity=100, pitch=v, start=t/fs, end=(t + 1)/fs)
+            print(str(t/fs) + " " + str((t+1)/fs))
+            note = pretty_midi.Note(velocity=100, pitch=i, start=t/fs, end=(t + 1)/fs)
             instrument.notes.append(note)
 
 
 pm_gen.instruments.append(instrument)
 
-pm_gen.write('out.mid')
+pm_gen.write(output)
 
