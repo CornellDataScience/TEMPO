@@ -157,7 +157,7 @@ print(gen)
 
 pm_gen = pretty_midi.PrettyMIDI(initial_tempo=80)
 
-instrument = pretty_midi.Instrument(program=pm.instruments[0].program, is_drum=False, name='my cello')
+instrument = pretty_midi.Instrument(program=pm.instruments[0].program, is_drum=False, name='my ins')
 
 
 for t in range(len(gen)):
