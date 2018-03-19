@@ -3,5 +3,6 @@
 
 *.ipynb
 *.DS_Store
-*/.DS_Store
+.idea/*
 *.xml
+*.iml
