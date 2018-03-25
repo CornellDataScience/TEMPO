@@ -1,7 +1,6 @@
 *.mid
 *.png
 
-*.ipynb
 *.DS_Store
 .idea/*
 *.xml
