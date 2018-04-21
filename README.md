@@ -1,5 +1,6 @@
 # TEMPO - Transforming Existing Music to Produce Originals
-1 short aragraph (3-4 sentence) description here
+Exploring various deep learning methods to create music.
+Topics explored include CNN's, RNN's, GAN's, and combinations of these.
 
 ## **Investigators**
 * Aaron Lou
