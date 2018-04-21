@@ -4,7 +4,7 @@ import pretty_midi
 import random
 import librosa.display
 
-SAMPLE_FRQ = 100
+SAMPLE_FRQ = 10
 
 START_POINT = 1000
 TRAIN_LENGTH = 1000
@@ -91,7 +91,7 @@ losses = [tf.nn.softmax_cross_entropy_with_logits_v2(labels=label, logits=logit)
           for label, logit in zip(y_outputs, logits)]
 
 total_loss = tf.reduce_mean(losses)
-train_step = tf.train.AdamOptimizer(learning_rate=0.001).minimize(total_loss)
+train_step = tf.train.AdamOptimizer(learning_rate=0.01).minimize(total_loss)
 
 
 
@@ -136,24 +136,31 @@ def generate_music(t, prompt):
     default = tf.zeros( [batch_size, num_steps, note_size])
     current = prompt[0:num_steps].tolist()
     for i in range(t):
-        x_batch = [current[i:i+num_steps]]
-        result = sess.run(preds, feed_dict={x: x_batch, y: default.eval()})
-        p = np.squeeze(result)[0]
-        p[np.argsort(p)[:-5]] = 0
-        p = p / np.sum(p)
-        current_note = np.random.choice(128, random.randrange(0,n + 1), p=p)
-        print("the note selected for " + str(i) + " is " + str(current_note))
-        c = [0]*128
-        for note in current_note:
-            c[note] = 1
-        current.append(c)
+        print("compare "+str(current[-2]) + " " + str(current[-1]))
+        if current[-2] == current[-1] and current[-3] == current[-2] :
+
+            v = np.array(current[-1]).max()
+            selected = np.random.choice(128,3)
+            print("random " + str(selected))
+            p = [0.0] * 128
+            for s in selected:
+                p[s] = v
+            current.append(p)
+        else :
+            x_batch = [current[i:i+num_steps]]
+            result = sess.run(preds, feed_dict={x: x_batch, y: default.eval()})
+            p = np.squeeze(result)[0]
+            selected = np.argsort(p)[-5:-1]
+            p[np.argsort(p)[:-5]] = 0.0
+            print("the note selected for " + str(i) + " is " + str(selected))
+            current.append(p.tolist())
+
     return current
 
 
 gen = generate_music(GENERATE_LENGTH, roll[START_POINT:START_POINT + prompt])
 print("the length of generated file is " + str(len(gen)))
 
-print(gen)
 
 pm_gen = pretty_midi.PrettyMIDI(initial_tempo=80)
 
@@ -165,7 +172,7 @@ for t in range(len(gen)):
         v = gen[t][i]
         if v > 0.0 :
             print(str(t/fs) + " " + str((t+1)/fs))
-            note = pretty_midi.Note(velocity=100, pitch=i, start=t/fs, end=(t + 1)/fs)
+            note = pretty_midi.Note(velocity=(int)(v), pitch=i, start=t/fs, end=(t + 1)/fs)
             instrument.notes.append(note)
 
 

@@ -1,1 +1,7 @@
-.mid
+*.mid
+*.png
+
+*.DS_Store
+.idea/*
+*.xml
+*.iml
