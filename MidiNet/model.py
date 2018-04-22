@@ -3,9 +3,10 @@ import numpy as np
 from layer import *
 
 class MidiNet(object):
-    def __init__(self, sess, batch_size = 64):
+    def __init__(self, sess, batch_size = 64, y_dim = 13):
         self.sess = sess
         self.batch_size = batch_size
+        self.y_dim = y_dim
 
         self.cond_bn0 = batch_norm(name = "cond_bn0")
         self.cond_bn1 = batch_norm(name = "cond_bn1")
@@ -17,6 +18,10 @@ class MidiNet(object):
         self.gen_bn2 = batch_norm(name = "gen_bn2")
         self.gen_bn3 = batch_norm(name = "gen_bn3")
         self.gen_bn4 = batch_norm(name = "gen_bn4")
+
+        self.dis_bn1 = batch_norm(name = "dis_bn1")
+        self.dis_bn2 = batch_norm(name = "dis_bn2")
+        self.dis_bn3 = batch_norm(name = "dis_bn3")
 
     #Cond2d should be a [batchsize, 16, 128, 1] tensor
     def generator(self, noise, cond1d = None, cond2d = None):
@@ -58,3 +63,25 @@ class MidiNet(object):
         l4 = concat_2d(l4, cond_l0)
 
         return tf.nn.sigmoid(deconv(l4, [self.batch_size, 16, 128, 1], filter_h = 1, filter_w = 128, str_h = 1, str_w = 2, name = "gen_dconv5"))
+
+    def discriminator(self, sample, cond1d, reuse = False):
+        if reuse:
+            tf.get_variable_scope().reuse_variables()
+
+        cond1dtensor = tf.reshape(cond1d, [self.batch_size, 1, 1, cond1d.get_shape().as_list()[-1]])
+        sample = concat_1d(sample, cond1dtensor)
+
+        l0 = lrelu(conv(sample, 1 + self.y_dim, filter_h = 1, filter_w = 128, name = "dis_conv0"))
+        fm = l0
+        l0 = concat_1d(l0, cond1dtensor)
+
+        l1 = lrelu(self.dis_bn1(conv2d(l0, 64 + self.y_dim, filter_h = 4, filter_w = 1, ame = "dis_conv1")))
+        l1 = tf.reshape(l1, [self.batch_size, -1])
+        l1 = tf.concat([l1, cond1d], 1)
+
+        l2 = lrelu(self.dis_bn2(linear(l1, 1024, name = "dis_lin2")))
+        l2 = tf.concat([l2, cond1d], 1)
+
+        l3 = linear(l2, 1, "dis_lin2")
+
+        return tf.nn.sigmoid(l3), l3, fm
