@@ -75,7 +75,7 @@ class MidiNet(object):
         fm = l0
         l0 = concat_1d(l0, cond1dtensor)
 
-        l1 = lrelu(self.dis_bn1(conv2d(l0, 64 + self.y_dim, filter_h = 4, filter_w = 1, ame = "dis_conv1")))
+        l1 = lrelu(self.dis_bn1(conv(l0, 64 + self.y_dim, filter_h = 4, filter_w = 1, ame = "dis_conv1")))
         l1 = tf.reshape(l1, [self.batch_size, -1])
         l1 = tf.concat([l1, cond1d], 1)
 
