@@ -3,7 +3,8 @@ import numpy as np
 from layer import *
 
 class MidiNet(object):
-    def __init__(self, sess, batch_size = 64, output_w = 16, output_h = 128, output_layers = 1, d1_dim = 13, d2_dim = 1):
+    def __init__(self, sess, batch_size = 64, output_w = 16, output_h = 128, output_layers = 1, d1_dim = 13, d2_dim = 1, 
+            lambda1 = 0.01, lambda2 = 0.1):
         self.sess = sess
         self.batch_size = batch_size
         self.d1_dim = d1_dim
@@ -11,6 +12,8 @@ class MidiNet(object):
         self.output_w = output_w
         self.output_h = output_h
         self.output_layers = output_layers
+        self.lambda1 = lambda1
+        self.lambda2 = lambda2
 
         self.cond_bn0 = batch_norm(name = "cond_bn0")
         self.cond_bn1 = batch_norm(name = "cond_bn1")
@@ -44,7 +47,18 @@ class MidiNet(object):
 
         self.d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.D_logits, labels = 0.9 * tf.ones_like(self.D)))
         self.d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.Df_logits, labels = tf.zeros_like(self.Df)))
-        self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.Df_logits, labels = tf.ones_like(self.Df)))    
+        self.g_loss0 = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.Df_logits, labels = tf.ones_like(self.Df)))    
+
+        self.mean_g = tf.reduce_mean(self.G, axis = 0)
+        self.mean_data = tf.reduce_mean(self.data, axis = 0)
+        self.mean_loss = tf.multiply(tf.nn.l2_loss(self.mean_g - self.mean_data), self.lambda1)
+
+        self.g_features = tf.reduce_mean(self.fmf, axis = 0)
+        self.data_features = tf.reduce_mean(self.fm, axis = 0)
+        self.feature_loss = tf.multiply(tf.nn.l2_loss(self.g_features - self.data_features), self.lambda2)
+
+        self.d_loss = self.d_loss_fake + self.d_loss_real
+        self.g_loss = self.g_loss0 + self.mean_loss + self.feature_loss
 
 
     #Cond2d should be a [batchsize, 16, 128, 1] tensor
