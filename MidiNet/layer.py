@@ -15,7 +15,7 @@ def linear(inp, out_size, scope, stddev = 0.02, bias_start = 0.0):
 def conv(inp, out_size, filter_h = 5, filter_w = 5, str_h = 2, str_w = 2, stddev = 0.02, name = "conv2d"):
     with tf.variable_scope(name):
         w = tf.get_variable("Weights", shape = [filter_h, filter_w, inp.get_shape()[-1].value, out_size], 
-            initializer = tf.truncated_normal_initializer(stddev = stddev))
+            initializer = tf.random_normal_initializer(stddev=stddev))
         conv = tf.nn.conv2d(inp, w, strides = [1, str_h, str_w, 1], padding = "VALID")
         bias = tf.get_variable("Bias", shape = [out_size], initializer= tf.constant_initializer(0.0))
         conv = tf.nn.bias_add(conv, bias)
