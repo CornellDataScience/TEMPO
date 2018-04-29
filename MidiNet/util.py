@@ -22,9 +22,11 @@ def save_midi(midi_array, image_path):
     pm_gen = pretty_midi.PrettyMIDI(initial_tempo=80)
     instrument = pretty_midi.Instrument(1, is_drum = False, name = "piano1")
     for t in range(len(midi_array)):
-        v = np.max(midi_array[t])
-        i = np.argmax(midi_array[t])
-        note = pretty_midi.Note(velocity=(int)(v), pitch=i, start=t/10, end=(t + 1)/10)
+        top_notes = np.argsort(-midi_array[t])[:3]
+        for n in top_notes:
+            volume = midi_array[t][n] * 127
+            if volume > 20:
+                note = pretty_midi.Note(velocity=(int)(volume), pitch=n, start=t/10, end=(t + 1)/10)
         instrument.notes.append(note)
     pm_gen.instruments.append(instrument)
     pm_gen.write(image_path)
