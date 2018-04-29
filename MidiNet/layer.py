@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 def lrelu(x, factor = 0.2):
     return tf.maximum(x, 0.2 * x)
@@ -55,4 +56,6 @@ class batch_norm(object):
         
     def __call__(self, x):
         return tf.layers.batch_normalization(x, momentum= self.momentum, epsilon= self.epsilon, scale= True, name= self.name)
-    
+
+def sample_Z(shape):
+  return np.random.uniform(-1., 1., size=shape)
